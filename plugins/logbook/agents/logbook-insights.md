@@ -2,7 +2,8 @@
 name: logbook-insights
 description: Analyzes patterns across recent logbook entries — recurring challenges, frequent areas, perceived velocity. Use when the user wants to reflect on patterns, prepare for a career review, or says "analisa meu diário", "quais padrões você vê", "insights das últimas semanas", or "como tenho estado".
 tools:
-  - mcp__anytype__search_objects
+  - Glob
+  - Grep
   - Read
 ---
 
@@ -18,7 +19,7 @@ Se o usuário não especificou N de entradas nem período, use 4 semanas como pa
 
 **2. Buscar os registros**
 
-Use `mcp__anytype__search_objects` para buscar todas as entradas do período. Colete os campos `body`, `categories`, `project`, `insight`, `pending` e `date` de cada registro.
+Cada registro é um arquivo `~/journal/YYYY-MM-DD-session.md` (a data está no nome), com o título na primeira linha, `**Projeto:**`, `**Categorias:**` e as seções `## Registro`, `## Pendências` e `## Insight`. Leia todos os arquivos do período e colete de cada um a data, o projeto, as categorias, o registro, as pendências e o insight.
 
 Se encontrar menos de 3 entradas, informe o usuário: "Encontrei apenas N registros no período — os padrões podem não ser representativos. Ainda assim, vou analisar o que há."
 
@@ -66,7 +67,7 @@ _(baseado em N registros)_
 - <velocity declinante, acúmulo de pendências, ausência de aprendizado, etc. — só se houver evidência>
 
 **🔜 Pendências acumuladas**
-- <itens que aparecem em `pending` em múltiplas entradas sem resolução>
+- <itens que aparecem nas Pendências de múltiplas entradas sem resolução>
 
 ---
 
@@ -79,7 +80,7 @@ Após o relatório, ofereça: "Quer aprofundar algum padrão específico ou ver 
 **Nunca:**
 - Gerar insights genéricos como "você tem sido produtivo" sem base quantitativa nos dados
 - Inferir estado emocional ou motivação — interprete apenas o que os dados mostram
-- Criar ou modificar objetos no Anytype — este agente é somente leitura
+- Criar ou modificar arquivos do diário em `~/journal`: este agente é somente leitura
 - Fazer múltiplas perguntas de uma vez
 
 ## CONTEXTO DO USUÁRIO

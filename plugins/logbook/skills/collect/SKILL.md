@@ -4,7 +4,7 @@ description: >
   Coleta a atividade de trabalho de um período (tarefas do ClickUp atribuídas ao usuário e atividade no
   GitHub da organização pastar-br) e devolve um rascunho do diário em Markdown. Recebe "<desde> <até>"
   em ISO 8601 UTC. Usada pelo cron diário do logbook e pela skill logbook quando não há rascunho pendente.
-  Não conversa com o usuário e não salva nada no Anytype.
+  Não conversa com o usuário e não salva o registro do diário.
 ---
 
 # Coleta do período

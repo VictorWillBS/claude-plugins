@@ -2,7 +2,7 @@
 name: logbook
 description: >
   Conduz a sessão do diário de trabalho a partir da atividade já coletada (ClickUp e GitHub): mostra o
-  resumo, pergunta só o que ficou em dúvida ou, sem dúvidas, apenas se faltou algo, e salva no Anytype.
+  resumo, pergunta só o que ficou em dúvida ou, sem dúvidas, apenas se faltou algo, e salva em ~/journal.
   Use quando o usuário quiser registrar o dia, abrir o rascunho do diário, ou disser "iniciar diário",
   "registrar sessão", "journal" ou "/logbook:logbook". Também lê uma página do Notion como contexto quando
   receber URL, page ID ou nome de página.
@@ -55,41 +55,29 @@ Classifique cada item em uma ou mais categorias:
 - **Aprendizado**: conceitos novos, técnicas estudadas, descobertas de domínio
 - **Melhoria**: ideias de processo, refatorações identificadas, otimizações percebidas
 
-Ao detectar padrão recorrente (mesmo bloqueio, mesma tecnologia, mesmo tipo de tarefa) comparando com registros desta semana via `search_objects`, mencione: "Esse é o segundo registro esta semana com desafios em X."
+Ao detectar padrão recorrente (mesmo bloqueio, mesma tecnologia, mesmo tipo de tarefa) comparando com os registros desta semana em `~/journal/*-session.md`, mencione: "Esse é o segundo registro esta semana com desafios em X."
 
 ## 6. PERSISTÊNCIA
 
-Crie **um** objeto no Anytype via `mcp__anytype__create_object`:
-
-```
-title:      "<DATA>: <resumo em uma linha>"
-date:       "<YYYY-MM-DD>"
-body:       "<registro completo em Markdown, com os links das tarefas e PRs>"
-categories: ["Progresso", "Desafio", "Aprendizado", "Melhoria"]  (apenas os aplicáveis)
-project:    "<projeto relacionado, ex: Anima, Pipeline de leilões>"
-pending:    "<PRs ainda abertas e tarefas não concluídas do período, mais o que o usuário citar>"
-insight:    "<padrão real observado, ou vazio>"
-```
-
-Se o Anytype estiver offline ou não responder após uma tentativa, avise e ofereça salvar em `~/journal/YYYY-MM-DD-session.md`:
+Salve **um** arquivo em `~/journal/YYYY-MM-DD-session.md`. Se já existir um arquivo com esse nome, use `YYYY-MM-DD-session-2.md` (e assim por diante): nunca sobrescreva um registro.
 
 ```markdown
 # <DATA>: <resumo em uma linha>
 
-**Projeto:** <projeto>
-**Categorias:** <categorias>
+**Projeto:** <projeto relacionado, ex: Anima, Pipeline de leilões>
+**Categorias:** <apenas as aplicáveis entre Progresso, Desafio, Aprendizado, Melhoria>
 
 ## Registro
 
-<corpo da sessão>
+<registro completo, com os links das tarefas e PRs>
 
 ## Pendências
 
-<pendências>
+<PRs ainda abertas e tarefas não concluídas do período, mais o que o usuário citar>
 
 ## Insight
 
-<insight ou "(nenhum padrão identificado esta semana)">
+<padrão real observado, ou "(nenhum padrão identificado esta semana)">
 ```
 
 Depois de salvar, mova os rascunhos usados para `~/journal/drafts/processed/`.
@@ -100,9 +88,9 @@ Depois de salvar, mova os rascunhos usados para `~/journal/drafts/processed/`.
 - Registrar como feito algo que não veio da coleta nem do usuário
 - Afirmar que o usuário mexeu numa tarefa só porque ela foi atualizada: outra pessoa pode ter alterado
 - Fazer perguntas genéricas (bloqueios, aprendizados) que a atividade já responde ou que não mudam o registro
-- Criar mais de um objeto por sessão
+- Criar mais de um arquivo por sessão
 - Modificar, criar ou deletar páginas no Notion: somente leitura via script
-- Sobrescrever objetos existentes no Anytype: sempre criar novo
+- Sobrescrever ou editar registros anteriores em `~/journal`: sempre criar um novo
 - Gerar insights genéricos como "Continue assim!"
 
 ## CONTEXTO DO USUÁRIO
