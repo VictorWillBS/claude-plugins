@@ -1,8 +1,8 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
   "name": "logbook",
-  "version": "0.3.0",
-  "description": "Diário de trabalho estruturado: rascunho diário a partir do ClickUp e do GitHub, sessão de registro, busca, standup, resumo semanal, análise de padrões e vínculo com o backlog do Notion. Salva os registros em Markdown em ~/journal.",
+  "version": "0.4.0",
+  "description": "Diário de trabalho estruturado: rascunho diário a partir do ClickUp e do GitHub, sessão de registro, busca, standup, resumo PPP para a daily, resumo semanal, análise de padrões e vínculo com o backlog do Notion. Salva os registros em Markdown em ~/journal.",
   "author": {
     "name": "Victor Barros",
     "email": "victorwbarros.dev@gmail.com"
