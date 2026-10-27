@@ -1,0 +1,12 @@
+{
+  "name": "victor-plugins",
+  "description": "Marketplace pessoal de plugins do Claude Code do Victor Barros.",
+  "owner": {
+    "name": "Victor Barros",
+    "email": "victorwbarros.dev@gmail.com"
+  },
+  "metadata": {
+    "pluginRoot": "./plugins"
+  },
+  "plugins": []
+}
