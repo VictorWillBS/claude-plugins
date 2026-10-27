@@ -1,0 +1,10 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "logbook",
+  "version": "0.1.0",
+  "description": "Diário de trabalho estruturado: registro de sessões, busca, standup, resumo semanal, análise de padrões e vínculo com o backlog do Notion. Persiste no Anytype via MCP.",
+  "author": {
+    "name": "Victor Barros",
+    "email": "victorwbarros.dev@gmail.com"
+  }
+}

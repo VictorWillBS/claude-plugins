@@ -8,5 +8,11 @@
   "metadata": {
     "pluginRoot": "./plugins"
   },
-  "plugins": []
+  "plugins": [
+    {
+      "name": "logbook",
+      "source": "./plugins/logbook",
+      "description": "Diário de trabalho estruturado com persistência no Anytype: registro de sessões, busca, standup, resumo semanal, análise de padrões e vínculo com o Notion."
+    }
+  ]
 }
