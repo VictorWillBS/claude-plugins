@@ -13,6 +13,11 @@
       "name": "logbook",
       "source": "./plugins/logbook",
       "description": "Diário de trabalho estruturado em Markdown: rascunho diário a partir do ClickUp e do GitHub, registro de sessões, busca, standup, resumo PPP para a daily, resumo semanal, análise de padrões e vínculo com o Notion."
+    },
+    {
+      "name": "pr-notify",
+      "source": "./plugins/pr-notify",
+      "description": "Avisos de comentários e PRs entre Claude, GitHub e ClickUp: DM no ClickUp para quem recebe um comentário meu no GitHub, e comentário na PR mais DM para os revisores quando dou push com commits novos."
     }
   ]
 }
