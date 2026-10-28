@@ -1,0 +1,17 @@
+{
+  "description": "Depois de um comentário no GitHub ou de um git push, pede ao Claude para rodar notify-github-comment ou notify-pr-update",
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/scripts/pr_notify_hook.py\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

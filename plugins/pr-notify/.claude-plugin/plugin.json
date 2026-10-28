@@ -1,0 +1,10 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "pr-notify",
+  "version": "0.1.0",
+  "description": "Avisa por DM no ClickUp quem recebe um comentário ou review que postei no GitHub pelo Claude, e avisa os revisores (na PR e no ClickUp) quando dou push com commits novos numa PR aberta. Disparado por um hook PostToolUse.",
+  "author": {
+    "name": "Victor Barros",
+    "email": "victorwbarros.dev@gmail.com"
+  }
+}
