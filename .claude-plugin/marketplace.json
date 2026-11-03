@@ -18,6 +18,11 @@
       "name": "pr-notify",
       "source": "./plugins/pr-notify",
       "description": "Avisos de comentários e PRs entre Claude, GitHub e ClickUp: DM no ClickUp para quem recebe um comentário meu no GitHub, e comentário na PR mais DM para os revisores quando dou push com commits novos."
+    },
+    {
+      "name": "review-critic",
+      "source": "./plugins/review-critic",
+      "description": "Crítica adversarial dos achados de uma revisão de PR: tenta derrubar cada achado com plano registrado e execução, detecta achados superdimensionados para o porte real do sistema, e classifica o que resiste por gravidade, prioridade e custo x benefício."
     }
   ]
 }
