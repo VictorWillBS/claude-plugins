@@ -1,0 +1,10 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "review-critic",
+  "version": "0.1.0",
+  "description": "Crítica adversarial dos achados de uma revisão de PR pelo método científico: tenta provar que cada achado não é real, com plano registrado, execução e controle na base, e classifica o que resiste por origem, escopo, proporcionalidade ao porte real, gravidade, prioridade e custo x benefício.",
+  "author": {
+    "name": "Victor Barros",
+    "email": "victorwbarros.dev@gmail.com"
+  }
+}
