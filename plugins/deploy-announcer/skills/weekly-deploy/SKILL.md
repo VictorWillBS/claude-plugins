@@ -67,24 +67,46 @@ branches.
 
 Hotfix direto em `P` (branch de funcionalidade para `P`) não muda a categoria: o fluxo regular é o de `S`.
 
+Sem nenhuma execução bem-sucedida registrada, classifique como fluxo por PR quando o gatilho do workflow
+de produção e as PRs mergeadas `<S> -> <P>` apontarem para o mesmo `P`.
+
 ## 3. Mudanças pendentes
 
 Para cada repositório com fluxo por PR:
 
 ```bash
-bash <scripts>/pending_changes.sh pastar-br/<repo> <P> <S>
+bash <scripts>/pending_changes.sh pastar-br/<repo> <P> <S> > /tmp/pending_<repo>.json
 ```
+
+Rode cada repositório numa chamada separada, com timeout de 10 minutos: com muitas PRs pendentes o
+script passa de 2 minutos.
 
 Se `ahead_by` for 0, não há deploy nesse repositório: pule.
 
 ## 4. Histórias no ClickUp
 
-1. Junte todos os `clickup_custom_ids` (ex.: `DEV-851`) e `clickup_task_ids` das PRs de todos os
-   repositórios.
-2. Busque cada tarefa com `clickup_get_task` (aceita o custom id). Guarde nome, status e URL. Se uma
-   tarefa não existir, trate a PR como sem história.
-3. Busque as Histórias da lista `901717139346` com status `pronto para produção` (`clickup_filter_tasks`).
-   As que não aparecem em nenhuma PR pendente vão para a seção "fora do deploy" da mensagem.
+Citar uma História não é o mesmo que entregá-la: descrição de PR cita História de contexto, de
+dependência ou de trabalho futuro. E muita PR entrega uma História sem citar o código dela. Por isso o
+vínculo segue as camadas abaixo, nesta ordem.
+
+**Status de entrega**: `code review`, `aguardando staging`, `em staging`, `pronto para produção`, `concluído`.
+
+1. **Carregue as Histórias** da lista `901717139346` com `clickup_filter_tasks`, `include_closed: true`,
+   `fields: ["custom_id", "status", "date_updated"]`, paginando até o fim. Monte o mapa
+   `custom_id → nome, status, URL`. Não use `clickup_get_task` aqui: ele devolve a descrição inteira.
+2. **Vincule cada PR pendente**:
+   1. Código em `dev_ids_in_title_or_branch`: vínculo direto, qualquer que seja o status.
+   2. Código em `dev_ids_in_body` ou tarefa em `clickup_task_ids_in_body`: vínculo só se a História
+      estiver num status de entrega. Em `backlog`, `especificação`, `pronto para dev`,
+      `em desenvolvimento` ou `cancelada`, é citação: ignore.
+   3. Sem vínculo até aqui: compare o título da PR com os nomes das Histórias em status de entrega.
+      Vincule só quando for claramente a mesma entrega (mesmo código `Hnn`, ou mesmo assunto com as
+      mesmas palavras-chave). Na dúvida, não vincule.
+3. **Histórias `aguardando staging`, `em staging` ou `pronto para produção` que ainda não têm PR**: para
+   cada uma, chame `clickup_get_task` com `include: ["git_links"]` e confira se alguma URL de
+   `git_links.pull_requests` é de uma PR pendente. Se for, vincule. As `pronto para produção` que
+   continuarem sem PR vão para a seção "sem PR identificada" da mensagem.
+4. Código DEV que não existe no mapa: ignore.
 
 ## 5. PR de deploy
 
@@ -134,7 +156,7 @@ Uma única mensagem com todos os repositórios que têm deploy. Envie com `click
 **<repo>** (<S> → <P>): [PR #<n>](<url>)
 - ...
 
-⚠️ Pronto para produção no ClickUp, mas fora do deploy:
+⚠️ Pronto para produção no ClickUp, sem PR identificada neste deploy:
 - [DEV-799 <nome>](<url>)
 
 Algo impede o deploy de algum desses itens? Respondam aqui na thread até as 10h.
@@ -142,12 +164,15 @@ Algo impede o deploy de algum desses itens? Respondam aqui na thread até as 10h
 
 Regras:
 
+- Histórias em ordem crescente de código. Uma História entregue em dois repositórios aparece nos dois.
 - Uma linha por História, com o status atual. Status `pronto para produção` ou `concluído` vai sem alerta.
   Qualquer outro status leva `⚠️` e o nome do status (`em staging` vira "⚠️ em staging, ainda não validada").
 - PRs sem história: no máximo 10 linhas por repositório. Passando disso, liste as 10 mais recentes e
   feche com `- e mais N PRs sem história (lista completa na PR de deploy)`.
 - Commits sem PR não entram na mensagem, só no corpo da PR.
-- Omita a seção "fora do deploy" quando ela estiver vazia.
+- Omita a seção "sem PR identificada" quando ela estiver vazia.
+- Se o ClickUp recusar a mensagem pelo tamanho, envie uma mensagem por repositório, cada uma com a
+  marcação, o título e a pergunta final; a seção "sem PR identificada" vai na última.
 - Repositório sem mudança pendente não aparece.
 - Se nenhum repositório tiver deploy, **não envie mensagem** no canal.
 - A data é a de hoje no fuso do usuário (passo 0), no formato `DD/MM`.

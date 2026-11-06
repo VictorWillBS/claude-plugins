@@ -10,7 +10,7 @@
 #   ahead_by        quantidade de commits pendentes
 #   open_deploy_pr  PR aberta de <origem> para <destino>, se existir
 #   prs             PRs de funcionalidade incluídas (sem as PRs entre branches de longa duração),
-#                   com as referências ao ClickUp achadas no título, na branch e na descrição
+#                   com os códigos DEV-N do título ou da branch separados dos citados só na descrição
 #   orphan_commits  commits que não pertencem a nenhuma PR de funcionalidade (push direto na branch)
 
 set -euo pipefail
@@ -47,13 +47,14 @@ for number in "${PR_NUMBERS[@]}"; do
   jq -e --arg re "$LONG_LIVED_REGEX" '.headRefName | test($re)' <<<"$pr" >/dev/null && continue
   # O campo commits do gh pr view para em 100; a API paginada devolve até 250.
   gh api --paginate "repos/${REPO}/pulls/${number}/commits?per_page=100" --jq '.[].sha[:7]' >> "$PR_SHAS"
-  jq -c '(.title + " " + .headRefName + " " + (.body // "")) as $text
-    | {
-        number, title, url, branch: .headRefName, author: .author.login, merged_at: .mergedAt,
-        clickup_custom_ids: ([$text | scan("(?i)\\bDEV-[0-9]+\\b") | ascii_upcase] | unique),
-        clickup_task_ids: ([$text | scan("(?i)app\\.clickup\\.com/t/(?:[0-9]+/)?([a-z0-9-]+)") | .[0]
-          | select(test("^([0-9]+|DEV-[0-9]+)$"; "i") | not)] | unique)
-      }' <<<"$pr" >> "$PRS"
+  jq -c 'def dev_ids: [scan("(?i)\\bDEV-[0-9]+\\b") | ascii_upcase] | unique;
+    {
+      number, title, url, branch: .headRefName, author: .author.login, merged_at: .mergedAt,
+      dev_ids_in_title_or_branch: ((.title + " " + .headRefName) | dev_ids),
+      dev_ids_in_body: ((.body // "") | dev_ids),
+      clickup_task_ids_in_body: ([(.body // "") | scan("(?i)app\\.clickup\\.com/t/(?:[0-9]+/)?([a-z0-9-]+)") | .[0]
+        | select(test("^([0-9]+|DEV-[0-9]+)$"; "i") | not)] | unique)
+    }' <<<"$pr" >> "$PRS"
 done
 
 jq -n \
