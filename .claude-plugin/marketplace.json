@@ -23,6 +23,11 @@
       "name": "review-critic",
       "source": "./plugins/review-critic",
       "description": "Crítica adversarial dos achados de uma revisão de PR: tenta derrubar cada achado com plano registrado e execução, detecta achados superdimensionados para o porte real do sistema, e classifica o que resiste por gravidade, prioridade e custo x benefício."
+    },
+    {
+      "name": "deploy-announcer",
+      "source": "./plugins/deploy-announcer",
+      "description": "Rotina semanal de deploy: infere o fluxo de deploy em produção de cada repositório da pastar-br, abre a PR de deploy, cruza as mudanças com as Histórias do ClickUp e avisa o canal Produto."
     }
   ]
 }
