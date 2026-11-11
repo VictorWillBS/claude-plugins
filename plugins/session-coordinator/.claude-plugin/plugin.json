@@ -1,0 +1,10 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "session-coordinator",
+  "version": "0.1.0",
+  "description": "Coordena várias sessões do Claude Code, uma por frente de trabalho, a partir de uma sessão coordenadora que não escreve código: abre sessões, manda tarefas autocontidas, confere SHA e testes, simula merges, mantém um log de decisões e leva ao usuário só as decisões novas.",
+  "author": {
+    "name": "Victor Barros",
+    "email": "victorwbarros.dev@gmail.com"
+  }
+}
