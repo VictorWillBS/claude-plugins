@@ -48,7 +48,10 @@ DRAFT=$(cd "$DRAFT_DIR" && claude -p "/logbook:collect $SINCE $UNTIL
 
 $GITHUB" \
   --model sonnet \
-  --allowedTools "mcp__claude_ai_ClickUp__clickup_get_user mcp__claude_ai_ClickUp__clickup_filter_tasks")
+  --allowedTools "mcp__claude_ai_ClickUp__clickup_get_user mcp__claude_ai_ClickUp__clickup_filter_tasks") || {
+  echo "[$(date -Is)] o claude falhou: $DRAFT" >&2
+  false
+}
 
 printf '%s\n' "$DRAFT" > "$DRAFT_FILE"
 echo "$UNTIL" > "$STATE_FILE"
