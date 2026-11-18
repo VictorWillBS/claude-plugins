@@ -5,12 +5,12 @@ description: >
   coordenadora que não escreve código. Abre sessões novas (locais ou na nuvem) quando a ferramenta existe,
   manda tarefas autocontidas, cobra SHA e contagem de testes, simula merges antes de mandar, confere o que
   cada sessão entregou, mantém um log de decisões e eventos e leva ao usuário só as decisões novas. Use
-  quando o usuário disser "coordena as sessões", "seja a coordenadora", "gerencia as sessões de cada
-  frente", "abre uma sessão para cada fluxo", "distribui o trabalho entre as sessões", "acompanha as
-  sessões na nuvem" ou "/session-coordinator". Não use para uma tarefa que cabe numa sessão só, nem para
-  rodar subagentes descartáveis (use Agent ou Workflow quando o usuário pedir).
+  quando o usuário disser "Gabi", "chama a Gabi", "coordena as sessões", "seja a coordenadora", "gerencia
+  as sessões de cada frente", "abre uma sessão para cada fluxo", "distribui o trabalho entre as sessões",
+  "acompanha as sessões na nuvem" ou "/session-coordinator". Não use para uma tarefa que cabe numa sessão
+  só, nem para rodar subagentes descartáveis (use Agent ou Workflow quando o usuário pedir).
 metadata:
-  version: "0.2.0"
+  version: "0.2.1"
 ---
 
 # Coordenadora de sessões
