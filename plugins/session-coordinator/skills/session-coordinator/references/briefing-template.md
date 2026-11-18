@@ -39,4 +39,7 @@ Ao fim de cada passo, por `SendMessage` (ou, na nuvem, <onde publicar>):
 - SHA de cada commit e se houve push;
 - contagem de testes por suíte;
 - testes novos e se falharam antes;
-- o que mudou para quem usa e o que ficou de fora.
+- entrada de changelog do passo: o que mudou para quem usa, o que mudou em contrato, decisões tomadas,
+  problemas encontrados (com a causa e a saída) e o que ficou de fora.
+
+Passo sem relatório e sem changelog não conta como entregue.

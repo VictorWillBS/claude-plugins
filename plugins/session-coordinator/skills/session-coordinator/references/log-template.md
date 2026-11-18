@@ -4,9 +4,17 @@ Log da coordenadora. Fora do git. Cada evento entra numa linha nova no fim do **
 
 ## Sessões
 
-| Frente | Sessão (nome no ListAgents) | Onde roda | Worktree e branch | Base |
-| --- | --- | --- | --- | --- |
-| <SIGLA> | <nome> | local ou nuvem | <caminho>, `<branch>` | `<sha>` |
+| Frente | Sessão (nome no ListAgents) | Modelo | Onde roda | Worktree e branch | Base |
+| --- | --- | --- | --- | --- | --- |
+| <SIGLA> | <nome> | <Haiku, Sonnet ou Opus, e o motivo> | local ou nuvem | <caminho>, `<branch>` | `<sha>` |
+
+## Premissas
+
+Preenchida pela skill `specify`. Nenhuma sessão recebe trabalho com linha `aberta`.
+
+| Ponto-chave | Premissa | Estado | Fonte |
+| --- | --- | --- | --- |
+| <objetivo, contrato, dado...> | <o que foi respondido> | aberta ou confirmada | <usuário, código, documento> |
 
 ## Autorizações
 
@@ -29,6 +37,16 @@ as sessões são abertas pelo usuário a partir dos briefings.
 | ID | Pendência | De quem |
 | --- | --- | --- |
 | P-01 | <o que falta> | <usuário, outra equipe, outro repositório> |
+
+## Problemas conhecidos
+
+| ID | Problema | Achado por | Causa e saída adotada | Repassado a |
+| --- | --- | --- | --- | --- |
+| K-01 | <o que quebrou ou surpreendeu> | <SIGLA> | <causa, como foi resolvido> | <frentes avisadas> |
+
+## Modo noturno
+
+Decisões provisórias (`N-xx`) e questões estacionadas (`E-xx`) de cada noite, com o caminho do relatório.
 
 ## Registro
 

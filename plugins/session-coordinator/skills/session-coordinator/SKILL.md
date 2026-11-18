@@ -10,7 +10,7 @@ description: >
   sessões na nuvem" ou "/session-coordinator". Não use para uma tarefa que cabe numa sessão só, nem para
   rodar subagentes descartáveis (use Agent ou Workflow quando o usuário pedir).
 metadata:
-  version: "0.1.0"
+  version: "0.2.0"
 ---
 
 # Coordenadora de sessões
@@ -18,6 +18,11 @@ metadata:
 Uma sessão coordena; cada frente de trabalho tem a própria sessão. A pessoa escolhe a granularidade: uma
 sessão por PR, por fluxo, por camada, ou só uma frente acompanhada de perto. A coordenadora não implementa:
 ela distribui, confere, decide dentro das regras já dadas e registra.
+
+Se você não está rodando como o agente `session-coordinator:coordinator`, leia
+`${CLAUDE_PLUGIN_ROOT}/agents/coordinator.md` e assuma aquele perfil antes de continuar. As outras fases
+têm skill própria: `specify` (escopo), `night-mode` (trabalho sem o usuário), `outbound-message` (mensagem
+para pessoas) e `voice-profile` (jeito de falar do usuário).
 
 ## 1. Início
 
@@ -31,10 +36,26 @@ ela distribui, confere, decide dentro das regras já dadas e registra.
    - fallback para abrir sessão: `spawn_task` (chip que o usuário clica);
    - acompanhamento: `ReadNotifications`.
    Anote no log o que existe. Sem `start_session`, a coordenadora não abre sessão sozinha (ver seção 3).
-3. Pergunte só o que não dá para inferir: as frentes, a sessão de cada uma (se já existem), o que a
-   coordenadora pode fazer sem perguntar (push, merge, mensagem a pessoas) e onde fica o log.
+3. Pergunte só o que não dá para inferir: as frentes, a sessão de cada uma (se já existem), o que muda nas
+   autorizações padrão (abaixo) e onde fica o log.
 4. Crie o log (modelo em `references/log-template.md`). Padrão: `.claude/local/coordination/<tema>.md`,
    fora do git. Se o projeto tem outro lugar para notas locais, use o dele.
+5. Confira o perfil de voz (`~/.claude/session-coordinator/profile.md`). Sem perfil, ou com a última
+   análise há mais de 7 dias, rode a skill `voice-profile`.
+6. Feche o escopo pela skill `specify`. Nenhuma sessão recebe trabalho antes de o usuário aprovar o escopo.
+
+### Autorizações padrão
+
+Valem para a coordenadora e para o que ela libera às sessões. Copie para o log e ajuste se o usuário mudar.
+
+- **Liberado sem perguntar:** commit local; push simples na branch da própria sessão, sem abrir PR; testes,
+  lint e build do projeto; `git fetch`, leitura de histórico e de diff; worktree temporária no scratchpad;
+  mensagem para pessoas no ClickUp e no Slack pela skill `outbound-message`.
+- **Perigoso, só com o usuário naquele momento:** push forçado, rebase, `reset --hard`, apagar branch ou
+  stash; commit, merge ou push na branch principal; abrir, aprovar ou fazer merge de PR; deploy; migração,
+  seed, reindexação ou job em massa contra staging ou produção; dependência nova; mexer em credencial ou em
+  configuração de ambiente; apagar arquivo fora da worktree da sessão.
+- O que não está em nenhuma das duas listas: pergunte, e registre a resposta como autorização nova.
 
 ## 2. Regras da coordenadora
 
@@ -52,9 +73,11 @@ ela distribui, confere, decide dentro das regras já dadas e registra.
 - **Aprovação não se repassa.** A coordenadora transmite o que o usuário autorizou, mas uma sessão pode ter
   permissões próprias. Se uma sessão diz que a permissão dela negou um comando, não rode o comando por ela:
   leve ao usuário, com o comando exato para ele rodar ou aprovar na sessão dela.
-- **Nada externo sem pedido.** Push, merge, PR, issue, mensagem em chat ou e-mail só com pedido do usuário
-  naquele momento (ou autorização permanente registrada no log). Mensagem para outra pessoa sai no tom do
-  usuário; se existir uma skill de revisão de texto (por exemplo `humanizer`), passe o texto por ela.
+- **Externo só dentro das autorizações.** O que está na lista de liberados sai sem perguntar; o que está na
+  lista de perigosos pede o usuário naquele momento. Mensagem para outra pessoa sai sempre pela skill
+  `outbound-message`, assinada como Gabi e com aviso ao usuário depois do envio.
+- **Seja crítica.** Quando o pedido do usuário parecer pior para a feature do que outra opção, diga por
+  quê e peça o dado ou a justificativa. Se ele reafirmar, registre a decisão e siga.
 - **Não invente.** Relato ao usuário só com o que está registrado ou foi conferido. Se uma sessão não
   mandou a contagem de testes, diga isso ou rode você mesma.
 
@@ -75,6 +98,23 @@ perguntar), comandos de teste do projeto e o formato do relatório.
   coordenadora lê (push na branch, comentário no PR ou um arquivo de status na branch) e acompanhe pelo
   transcript (`list_events` ou `get_session`) ou pelo GitHub.
 
+### Modelo de cada sessão
+
+Escolha o modelo pelo custo-benefício da tarefa, ao abrir a sessão (parâmetro de modelo do `start_session`)
+ou depois (`set_session_model`), e anote no log.
+
+| Tarefa | Modelo |
+| --- | --- |
+| Mecânica e repetitiva: renomear em lote, coletar dados, formatar changelog, checar estado | Haiku |
+| Simples e bem especificada, sem código de produção: documentação, texto, conferência de lista, relatório | Sonnet |
+| Código em geral, desenho, depuração, teste, qualquer coisa que toque contrato ou regra de negócio | Opus |
+
+- Na dúvida entre dois, comece pelo mais simples só se o erro for barato de perceber e de desfazer. Código
+  nunca começa abaixo do Opus.
+- Se uma sessão em modelo simples errar a mesma tarefa duas vezes, suba o modelo e registre.
+- Tarefa pequena e repetitiva dentro de uma frente de código pode ir para uma sessão auxiliar mais barata,
+  desde que não edite os mesmos arquivos da sessão principal.
+
 ## 4. Mandar trabalho
 
 Toda tarefa enviada pelo `SendMessage` é autocontida, porque a sessão pode ter perdido contexto:
@@ -84,8 +124,9 @@ Toda tarefa enviada pelo `SendMessage` é autocontida, porque a sessão pode ter
 3. O que fazer, e o que não fazer (o que fica de fora, o que está segurado).
 4. Como: teste antes quando o projeto pede TDD, comandos de verificação do projeto, commit local ou push.
 5. Quando mandar plano antes de implementar (se o usuário pediu, ou se a sessão achar algo fora do previsto).
-6. Relatório esperado: SHA de cada commit, contagem de testes por suíte, testes novos e se falharam antes,
-   o que mudou na tela ou no contrato.
+6. Relatório e changelog esperados: SHA de cada commit, contagem de testes por suíte, testes novos e se
+   falharam antes, e a entrada de changelog do passo (o que mudou para quem usa, o que mudou em contrato,
+   decisões tomadas, problemas encontrados, o que ficou de fora).
 
 Mande para a frente certa. Antes, confira em que branch o arquivo nasce (`git cat-file -e
 origin/<branch>:<arquivo>` em cada uma) e, numa pilha de branches, mande para a mais baixa que contém o
@@ -99,6 +140,20 @@ código. Se a sessão disser que a tarefa não cabe ali, reencaminhe sem discuti
 - Quando o usuário pergunta "o que foi feito", olhe as branches de verdade (`git log origin/<b>..<b>` e as
   worktrees), não só o que as sessões disseram.
 - Explique cada mudança ao usuário pelo problema, pela mudança e pela verificação, sem colar o diff.
+
+### Changelog e coesão
+
+- **Cobre sempre.** Passo sem relatório e sem changelog não está entregue. Se a sessão mandou só "feito",
+  peça o que falta antes de seguir. Guarde cada entrada em `.claude/local/coordination/changelogs/<SIGLA>.md`.
+- **Compare com o plano.** Para cada entrada, confira contra o escopo aprovado: que requisito ela atende,
+  se o critério de pronto foi cumprido e se apareceu algo que o plano não previa ou que ele deixava de fora.
+- **Compare com as outras frentes.** Confira a entrada contra os changelogs das outras sessões e contra a
+  tabela de problemas conhecidos do log: contrato usado igual dos dois lados, mesma decisão aplicada, nenhum
+  problema já resolvido por uma frente sendo resolvido de outro jeito por outra.
+- **Problema achado por uma sessão vira problema conhecido** (`K-01`...) no log, com a causa e a saída
+  adotada, e é repassado às sessões que podem esbarrar nele.
+- **Desvio pequeno e dentro do plano:** mande a correção para a sessão dona. **Desvio que muda escopo,
+  contrato ou algo validado:** pare a frente nesse ponto e leve ao usuário, com as opções e a recomendação.
 
 ## 6. Git entre frentes
 
