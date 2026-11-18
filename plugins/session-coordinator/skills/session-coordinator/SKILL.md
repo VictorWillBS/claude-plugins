@@ -10,7 +10,7 @@ description: >
   "acompanha as sessões na nuvem" ou "/session-coordinator". Não use para uma tarefa que cabe numa sessão
   só, nem para rodar subagentes descartáveis (use Agent ou Workflow quando o usuário pedir).
 metadata:
-  version: "0.2.1"
+  version: "0.2.3"
 ---
 
 # Coordenadora de sessões
@@ -32,7 +32,7 @@ para pessoas) e `voice-profile` (jeito de falar do usuário).
    ambientes; procure por palavra-chave quando o nome exato não vier):
    - mensagens: `ListAgents`, `SendMessage`;
    - sessões: `start_session`, `list_sessions`, `get_session`, `get_usage`, `list_events`, `stop_session`,
-     `archive_session`, `open_session_in`;
+     `archive_session`, `open_session_in`, `set_session_title`;
    - fallback para abrir sessão: `spawn_task` (chip que o usuário clica);
    - acompanhamento: `ReadNotifications`.
    Anote no log o que existe. Sem `start_session`, a coordenadora não abre sessão sozinha (ver seção 3).
@@ -89,8 +89,8 @@ perguntar), comandos de teste do projeto e o formato do relatório.
 
 - **Com `start_session`:** abra a sessão com o briefing como primeira mensagem. Local para trabalho que
   precisa da máquina (simulador, banco local, segredos); nuvem para trabalho que roda só com o repositório.
-  Dê um nome curto e estável (sigla da frente) para a sessão. Se o usuário quiser acompanhar, abra ao lado
-  com `open_session_in`.
+  Dê à sessão o título `<Função do agente> · <contexto do trabalho>` (regra na seção 7). Se o usuário
+  quiser acompanhar, abra ao lado com `open_session_in`.
 - **Sem `start_session`:** grave o briefing num arquivo (`.claude/local/coordination/briefings/<frente>.md`)
   e peça ao usuário para abrir a sessão e colar, ou ofereça um `spawn_task` com o briefing. Depois, ache a
   sessão no `ListAgents` e confirme o nome.
@@ -171,6 +171,22 @@ código. Se a sessão disser que a tarefa não cabe ali, reencaminhe sem discuti
 - **Contexto das sessões:** confira com `get_usage` (ou o equivalente) a cada relatório. A partir de 40%,
   avise o usuário e recomende handoff no próximo ponto limpo (depois de um commit, sem trabalho pela
   metade). Vale para a própria coordenadora.
+- **Títulos das sessões:** toda sessão da coordenação segue o padrão `<Função do agente> · <contexto do
+  trabalho>`, definido e atualizado pela coordenadora com `set_session_title`.
+  - **Coordenadora:** a função é `Coordenação`. O contexto traz o tema e o estado atual, por exemplo
+    `Coordenação · <tema>: fechando escopo` ou `Coordenação · <tema>: 2 de 3 frentes entregues`.
+  - **Sessões das frentes:** a função é o papel da sessão na coordenação (por exemplo `Backend`, `Frontend`,
+    `Testes`, `Revisão`, `Migração`), e o contexto é o que ela está fazendo agora, por exemplo
+    `Backend · <tema>: endpoint de pagamento` ou `Testes · <tema>: aguardando decisão`. A função não muda
+    durante a coordenação e é única entre as sessões; com duas sessões na mesma função, diferencie
+    (`Backend 1`, `Backend 2`).
+  - **Quando atualizar:** ao abrir e sempre que o estado mudar: escopo aprovado, sessões abertas, tarefa
+    nova enviada, frente entregue ou parada, entrada e saída do modo noturno, espera por decisão do
+    usuário, trabalho concluído. Não renomeie sem mudança de estado.
+  - **Endereço:** se o título for também o nome que o `ListAgents` e o `SendMessage` usam, confirme o nome
+    novo depois de cada troca e atualize a tabela de sessões do log. No log e nas mensagens, cada frente
+    continua identificada pela sigla, que não muda.
+  - Sem a ferramenta, peça à própria sessão que ajuste o título, ou anote no log e siga.
 - **Rotinas** (checar um chat, uma revisão, um CI de hora em hora) só com pedido do usuário. Registre o
   agendamento e o último ponto lido no log, para a próxima rodada não repetir.
 - **Handoff da coordenadora:** quando o contexto pedir, escreva um handoff com o papel, as sessões e o que

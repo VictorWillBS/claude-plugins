@@ -4,9 +4,9 @@ Log da coordenadora. Fora do git. Cada evento entra numa linha nova no fim do **
 
 ## Sessões
 
-| Frente | Sessão (nome no ListAgents) | Modelo | Onde roda | Worktree e branch | Base |
-| --- | --- | --- | --- | --- | --- |
-| <SIGLA> | <nome> | <Haiku, Sonnet ou Opus, e o motivo> | local ou nuvem | <caminho>, `<branch>` | `<sha>` |
+| Frente | Função | Sessão (nome atual no ListAgents) | Modelo | Onde roda | Worktree e branch | Base |
+| --- | --- | --- | --- | --- | --- | --- |
+| <SIGLA> | <Backend, Testes...> | <nome> | <Haiku, Sonnet ou Opus, e o motivo> | local ou nuvem | <caminho>, `<branch>` | `<sha>` |
 
 ## Premissas
 

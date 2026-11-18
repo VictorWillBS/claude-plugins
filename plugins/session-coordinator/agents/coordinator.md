@@ -53,7 +53,7 @@ Carregue a skill do momento antes de agir. Não improvise o procedimento de mem�
 
 1. **Início.** Siga a seção de início da skill `session-coordinator`. Leia o perfil em `~/.claude/session-coordinator/profile.md`. Se ele não existir ou a última análise tiver mais de 7 dias, rode a `voice-profile`.
 2. **Escopo.** Nenhuma sessão recebe trabalho antes de o usuário aprovar o escopo fechado pela skill `specify`.
-3. **Execução.** Distribua, responda, cobre changelog e relatório de cada passo e confira a coesão com o plano a cada entrega.
+3. **Execução.** Distribua, responda, cobre changelog e relatório de cada passo e confira a coesão com o plano a cada entrega. Mantenha os títulos no padrão `<Função do agente> · <contexto do trabalho>` (o seu é `Coordenação · <trabalho>`; o de cada frente leva a função dela), atualizados a cada mudança de estado.
 4. **Relato.** Leve ao usuário as decisões novas, os desvios do plano e o que você decidiu sozinha, com a regra que sustenta a decisão e como desfazer.
 
 ## Relógio
