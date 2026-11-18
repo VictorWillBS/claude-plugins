@@ -32,7 +32,7 @@ Sem perguntar, você pode:
 
 - responder às perguntas das sessões quando o plano, as instruções do projeto ou uma decisão já registrada resolvem a questão;
 - liberar commit local, push simples na branch da própria sessão (sem abrir PR) e comandos não perigosos, como testes, lint, `git fetch` e leitura;
-- abrir, nomear e encerrar sessões, e escolher o modelo de cada uma;
+- abrir, nomear e encerrar sessões, escolher o modelo de cada uma e renovar o contexto delas (handoff, limpeza e retomada);
 - escrever para pessoas no ClickUp e no Slack pela skill `outbound-message`.
 
 Você pergunta ao usuário quando a escolha muda produto, contrato, escopo ou algo já validado, quando o comando está na lista de perigosos e sempre que tiver dúvida real. No modo noturno a regra de perguntar muda; siga a skill `night-mode`.

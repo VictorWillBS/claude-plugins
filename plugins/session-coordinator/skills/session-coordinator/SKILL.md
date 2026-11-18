@@ -10,7 +10,7 @@ description: >
   "acompanha as sessões na nuvem" ou "/session-coordinator". Não use para uma tarefa que cabe numa sessão
   só, nem para rodar subagentes descartáveis (use Agent ou Workflow quando o usuário pedir).
 metadata:
-  version: "0.2.3"
+  version: "0.2.4"
 ---
 
 # Coordenadora de sessões
@@ -32,7 +32,7 @@ para pessoas) e `voice-profile` (jeito de falar do usuário).
    ambientes; procure por palavra-chave quando o nome exato não vier):
    - mensagens: `ListAgents`, `SendMessage`;
    - sessões: `start_session`, `list_sessions`, `get_session`, `get_usage`, `list_events`, `stop_session`,
-     `archive_session`, `open_session_in`, `set_session_title`;
+     `archive_session`, `open_session_in`, `set_session_title`, `clear_session`;
    - fallback para abrir sessão: `spawn_task` (chip que o usuário clica);
    - acompanhamento: `ReadNotifications`.
    Anote no log o que existe. Sem `start_session`, a coordenadora não abre sessão sozinha (ver seção 3).
@@ -169,8 +169,27 @@ código. Se a sessão disser que a tarefa não cabe ali, reencaminhe sem discuti
 ## 7. Acompanhar
 
 - **Contexto das sessões:** confira com `get_usage` (ou o equivalente) a cada relatório. A partir de 40%,
-  avise o usuário e recomende handoff no próximo ponto limpo (depois de um commit, sem trabalho pela
-  metade). Vale para a própria coordenadora.
+  renove a sessão no próximo ponto limpo (depois de um commit, sem trabalho pela metade), pelo ciclo
+  abaixo. Para a própria coordenadora, vale o handoff descrito no fim desta seção.
+- **Renovar uma sessão (handoff, limpeza, retomada):** a coordenadora ordena os três passos sem perguntar
+  e avisa o usuário depois.
+  1. **Handoff.** Mande a sessão escrever o handoff (pela skill de handoff do projeto, se houver) em
+     `.claude/local/coordination/handoffs/<SIGLA>-AAAA-MM-DD-HHMM.md`, com o estado do trabalho, a branch e
+     o último SHA, o que falta, as decisões e os problemas conhecidos que a afetam, e responder só com o
+     caminho do arquivo.
+  2. **Garantir que existe.** Confira que o arquivo está no caminho informado e não está vazio (`test -s`,
+     `wc -l`). Não leia o conteúdo: o handoff é para a sessão, não para o contexto da coordenadora. Se o
+     arquivo não existir ou estiver vazio, peça de novo e não limpe.
+  3. **Limpar.** Com a sessão ociosa, limpe com `clear_session`. A ferramenta só aceita sessão que a
+     coordenadora abriu, e recusa sessão ocupada, com mensagem na fila, fixada ou aberta na tela do usuário.
+  4. **Retomar.** Mande a primeira mensagem da sessão limpa: o papel dela (sigla, função e quem é a
+     coordenadora), o caminho do handoff para ler e a instrução de confirmar o que entendeu antes de
+     continuar. Confira a confirmação contra o log (branch, SHA, tarefa em andamento).
+  5. Registre no log o caminho do handoff e a hora da limpeza, e confirme o nome da sessão no `ListAgents`.
+
+  Se a limpeza for recusada ou a ferramenta não existir, não contorne: leve ao usuário o motivo e o que ele
+  precisa fazer (fechar a sessão na tela, desafixar ou rodar `/clear` nela), com a mensagem de retomada
+  pronta. No modo noturno, estacione a renovação e deixe a sessão seguir enquanto tiver contexto.
 - **Títulos das sessões:** toda sessão da coordenação segue o padrão `<Função do agente> · <contexto do
   trabalho>`, definido e atualizado pela coordenadora com `set_session_title`.
   - **Coordenadora:** a função é `Coordenação`. O contexto traz o tema e o estado atual, por exemplo
