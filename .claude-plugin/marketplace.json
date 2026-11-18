@@ -32,7 +32,7 @@
     {
       "name": "session-coordinator",
       "source": "./plugins/session-coordinator",
-      "description": "Coordenação de várias sessões do Claude Code, uma por frente de trabalho: briefings autocontidos, conferência de SHA e testes, simulação de merges, log de decisões e eventos, e só as decisões novas levadas ao usuário."
+      "description": "Agente coordenador de sessões do Claude Code, uma por frente de trabalho, que nunca mexe no código: escopo fechado com o usuário, sessões com o modelo certo para cada tarefa, conferência de entregas e changelogs contra o plano, mensagens no tom do usuário e modo noturno com relatório."
     }
   ]
 }
