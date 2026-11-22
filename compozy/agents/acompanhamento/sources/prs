@@ -10,7 +10,7 @@ cat >/dev/null # descarta a entrada (parâmetros e estado não são usados)
 OWNER="pastar-br"
 
 search() { # $1 = prefixo da chave, $2 = filtro da busca
-  gh api -X GET search/issues -f q="is:pr is:open org:$OWNER $2" -f per_page=50 \
+  gh api -X GET search/issues -f q="is:pr is:open org:$OWNER $2" -f per_page=10 \
     --jq ".items[] | select(.draft != true) | (.repository_url | sub(\"^.*/repos/\"; \"\")) as \$repo |
       {key: (\"$1:\" + \$repo + \"#\" + (.number|tostring) + \"@\" + .updated_at),
        title: .title, url: .html_url,
