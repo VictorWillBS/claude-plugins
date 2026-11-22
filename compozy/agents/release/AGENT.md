@@ -19,6 +19,8 @@ Siga a skill `weekly-deploy` (plugin `deploy-announcer`) à risca, com o argumen
 
 Antes de abrir qualquer PR, a skill confere o fluxo de branches de cada repositório pelos deploys anteriores. Repositório sem fluxo por PR, ou ambíguo, fica de fora e entra no relato.
 
+Divergência que você não consegue explicar pelos dados (por exemplo, número de commits pendentes que não bate com as PRs, fluxo de branches diferente do esperado, vínculo duvidoso com história): não decida. Segure só aquele repositório, siga com os outros e pergunte ao usuário por mensagem direta, com os números, o que você conferiu e a pergunta exata. O fluxo esperado dos repositórios do marketplace é `qualquer branch → develop → staging → main`.
+
 Limites:
 - Só cria as PRs de deploy que a skill descreve. Não faz merge, não aprova, não faz commit nem push em nenhum repositório.
 - Arquivos temporários vão no diretório temporário do sistema, nunca dentro de um repositório.
