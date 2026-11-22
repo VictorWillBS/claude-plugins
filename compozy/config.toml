@@ -1,0 +1,46 @@
+# Trecho para ~/.compozy/config.toml (camada global).
+# Junte com o que o `compozy install` já gerou; não substitua o arquivo inteiro.
+# Os valores entre <> são seus: preencha antes de usar.
+
+[defaults]
+provider = "claude"
+
+[permissions]
+# Padrão de sessão sem nível próprio. Todos os agentes do time declaram o deles.
+mode = "approve-edits"
+
+[automation]
+timezone = "America/Sao_Paulo"
+
+# Skills da GABI (specify, outbound-message, voice-profile) a partir do clone do claude-plugins.
+[skills]
+custom_sources = ["~/claude-plugins/plugins/session-coordinator/skills"]
+
+# Agentes do spec-cycle (já vêm com o Compozy): só modelo e nível, sem copiar o AGENT.md deles.
+[agents.overrides.spec_conductor]
+model = "claude-opus-5-5"
+reasoning_effort = "high"
+permissions = "auto"
+
+[agents.overrides.code_implementer]
+model = "claude-opus-5-5"
+reasoning_effort = "high"
+permissions = "auto"
+
+# Checagem dos reportes no Slack, pela GABI.
+[[automation.jobs]]
+scope = "workspace"
+workspace = "<caminho do clone do erural-mkp-app>"
+name = "gabi-slack"
+agent = "gabi"
+prompt = "Faça a checagem do Slack pela seção 'Reportes no Slack' do seu AGENT.md."
+schedule = { mode = "every", interval = "<intervalo, ex.: 30m>" }
+
+# Limpeza do ambiente, pela zeladoria.
+[[automation.jobs]]
+scope = "workspace"
+workspace = "<caminho do clone do erural-mkp-app>"
+name = "zeladoria"
+agent = "zeladoria"
+prompt = "Faça a limpeza do ambiente pelo seu AGENT.md. Sessão abandonada: sem atividade há mais de <dias> dias."
+schedule = { mode = "cron", expr = "<cron, ex.: 0 19 * * 1-5>" }

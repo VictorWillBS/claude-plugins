@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# Fonte do check-in do agente acompanhamento.
+# Lista os PRs abertos em que é a vez do usuário revisar e os PRs dele atualizados.
+# Usa o login do gh da máquina e a busca REST do GitHub.
+# A chave muda quando o PR é atualizado; chave igual não acorda o modelo.
+set -euo pipefail
+
+cat >/dev/null # descarta a entrada (parâmetros e estado não são usados)
+
+OWNER="pastar-br"
+
+search() { # $1 = prefixo da chave, $2 = filtro da busca
+  gh api -X GET search/issues -f q="is:pr is:open org:$OWNER $2" -f per_page=50 \
+    --jq ".items[] | select(.draft != true) | (.repository_url | sub(\"^.*/repos/\"; \"\")) as \$repo |
+      {key: (\"$1:\" + \$repo + \"#\" + (.number|tostring) + \"@\" + .updated_at),
+       title: .title, url: .html_url,
+       attributes: {kind: \"$1\", repo: \$repo, number: .number}}"
+}
+
+review=$(search review "review-requested:@me")
+mine=$(search mine "author:@me")
+
+items=$(printf '%s\n%s\n' "$review" "$mine" | grep -v '^$' | paste -sd, - || true)
+printf '{"items":[%s]}\n' "$items"
