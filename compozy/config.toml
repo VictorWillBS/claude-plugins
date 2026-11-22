@@ -12,9 +12,13 @@ mode = "approve-edits"
 [automation]
 timezone = "America/Sao_Paulo"
 
-# Skills da GABI (specify, outbound-message, voice-profile) a partir do clone do claude-plugins.
+# Skills a partir do clone do claude-plugins: as da GABI (specify, outbound-message, voice-profile)
+# e a weekly-deploy, do agente release.
 [skills]
-custom_sources = ["~/claude-plugins/plugins/session-coordinator/skills"]
+custom_sources = [
+  "~/claude-plugins/plugins/session-coordinator/skills",
+  "~/claude-plugins/plugins/deploy-announcer/skills",
+]
 
 # Agentes do spec-cycle (já vêm com o Compozy): só modelo e nível, sem copiar o AGENT.md deles.
 [agents.overrides.spec_conductor]
@@ -44,3 +48,21 @@ name = "zeladoria"
 agent = "zeladoria"
 prompt = "Faça a limpeza do ambiente pelo seu AGENT.md. Sessão abandonada: sem atividade há mais de <dias> dias."
 schedule = { mode = "cron", expr = "<cron, ex.: 0 19 * * 1-5>" }
+
+# Release semanal, pelo agente release. Vale para todos os repositórios da pastar-br, por isso é global.
+# Horários no fuso de [automation].timezone.
+[[automation.jobs]]
+scope = "global"
+name = "release-pergunta"
+agent = "release"
+prompt = "Siga a skill weekly-deploy com o argumento --ask (pergunta de quinta). Scripts da skill: ~/claude-plugins/plugins/deploy-announcer/scripts/."
+# Máquina desligada às 17h: pergunta ao ligar, até 3h depois; passou disso, pula a semana.
+schedule = { mode = "cron", expr = "0 17 * * 4", catch_up_policy = "skip_missed", misfire_grace_seconds = 10800 }
+
+[[automation.jobs]]
+scope = "global"
+name = "release-sexta"
+agent = "release"
+prompt = "Siga a skill weekly-deploy sem argumento (release de sexta). Scripts da skill: ~/claude-plugins/plugins/deploy-announcer/scripts/."
+# Máquina desligada às 9h: roda ao ligar só até as 10h, a hora da release.
+schedule = { mode = "cron", expr = "0 9 * * 5", catch_up_policy = "skip_missed", misfire_grace_seconds = 3600 }

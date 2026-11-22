@@ -17,6 +17,7 @@ A GABI (Gestora de Agentes de Baixa Intervenção) coordena um time de agentes d
 | Follow-up | `investigador` | sob demanda | reproduz o reporte do Slack e abre a história de bug | Opus |
 | Self-care | `zeladoria` | agendada | arquiva sessões e remove worktrees mortas, sem perder trabalho | Haiku |
 | Comunicação | `comunicacao` | sob demanda | notas de lançamento para GitHub, Slack e WhatsApp | Sonnet |
+| Comunicação | `release` | agendado | quinta 17h pergunta ao Produto; sexta 9h abre as PRs de staging para produção e avisa a release das 10h | Sonnet |
 
 O `reviewer` do Compozy fica sem uso: a revisão é do time de pós-código.
 
@@ -30,6 +31,8 @@ O `reviewer` do Compozy fica sem uso: a revisão é do time de pós-código.
 
 **Reporte no Slack.** A GABI checa `#lançamento-novo-mkp`, `#marketplace-produto` e as suas DMs, responde como você que vamos investigar e abre o `investigador`. Quando você for falar com a pessoa, a história de bug já tem a reprodução e a causa provável.
 
+**Release semanal.** Quinta, 17h: o `release` pergunta no canal Produto do ClickUp se há mudança importante para subir, com a lista do que já está em staging nos repositórios com mudança nos últimos 7 dias. Sexta, 9h: lê a thread; o repositório citado numa resposta fica segurado e você recebe DM; nos outros, confere o fluxo de branches pelos deploys anteriores, abre a PR de staging para produção (ou reusa a aberta) e avisa a release das 10h. Tudo pela skill `weekly-deploy` do `deploy-announcer`.
+
 ## O que custa modelo
 
 | Gatilho | Custo |
@@ -38,6 +41,7 @@ O `reviewer` do Compozy fica sem uso: a revisão é do time de pós-código.
 | Check-in da `gabi` | só acorda o modelo quando o estado das sessões muda |
 | Checagem do Slack | uma chamada de modelo por intervalo, mesmo sem mensagem nova |
 | Zeladoria | uma sessão Haiku por execução |
+| Release | duas sessões Sonnet por semana |
 
 Teto diário por agente sempre ligado: `compozy agent instance budget`.
 
@@ -57,15 +61,25 @@ Teto diário por agente sempre ligado: `compozy agent instance budget`.
    compozy daemon start
    ```
 
-2. Junte o `config.toml` desta pasta ao `~/.compozy/config.toml` e preencha os valores entre `<>`.
+2. Pré-requisitos dos scripts da `weekly-deploy` (bash 4 ou mais e `jq`; o macOS vem com bash 3.2), com o `gh` autenticado na organização:
 
-3. Copie os agentes:
+   ```bash
+   brew install bash jq
+   ```
+
+   ```bash
+   gh auth status
+   ```
+
+3. Junte o `config.toml` desta pasta ao `~/.compozy/config.toml` e preencha os valores entre `<>`.
+
+4. Copie os agentes:
 
    ```bash
    mkdir -p ~/.compozy/agents && cp -R compozy/agents/* ~/.compozy/agents/
    ```
 
-4. Registre o repositório e ligue os dois agentes sempre ligados. Do clone do `erural-mkp-app`:
+5. Registre o repositório e ligue os dois agentes sempre ligados. Do clone do `erural-mkp-app`:
 
    ```bash
    compozy workspace add "$PWD" --name erural-mkp-app
@@ -79,13 +93,13 @@ Teto diário por agente sempre ligado: `compozy agent instance budget`.
    compozy agent instance create acompanhamento --workspace erural-mkp-app
    ```
 
-5. Preencha os valores do `rules.sh` e grave as regras:
+6. Preencha os valores do `rules.sh` e grave as regras:
 
    ```bash
    bash compozy/rules.sh
    ```
 
-6. Aprove as ações dos check-ins e o script de PRs (o Compozy ignora tudo até você aprovar):
+7. Aprove as ações dos check-ins e o script de PRs (o Compozy ignora tudo até você aprovar):
 
    ```bash
    compozy agent heartbeat authority approve gabi
@@ -99,7 +113,7 @@ Teto diário por agente sempre ligado: `compozy agent instance budget`.
    compozy agent heartbeat sources approve acompanhamento prs
    ```
 
-7. Ponha um teto diário nos dois:
+8. Ponha um teto diário nos dois:
 
    ```bash
    compozy agent instance budget gabi --workspace erural-mkp-app --usd <valor>
@@ -109,13 +123,13 @@ Teto diário por agente sempre ligado: `compozy agent instance budget`.
    compozy agent instance budget acompanhamento --workspace erural-mkp-app --usd <valor>
    ```
 
-8. Deixe os arquivos locais do time fora do git, só na sua máquina:
+9. Deixe os arquivos locais do time fora do git, só na sua máquina:
 
    ```bash
    echo '.specs/**/_run.md' >> .git/info/exclude
    ```
 
-9. Confira:
+10. Confira:
 
    ```bash
    compozy agent list
@@ -131,11 +145,13 @@ Teto diário por agente sempre ligado: `compozy agent instance budget`.
 
 ## A conferir no primeiro uso
 
-1. **`pixel-perfect`.** Não achei a skill em nenhum plugin instalado nem no GitHub alcançável. Sem ela, o `qa` registra que não houve conferência de design.
-2. **Conectores.** `gabi`, `investigador` e `comunicacao` usam `lean_environment: false` para herdar o ClickUp e o Slack do seu Claude Code. Confira se o ClickUp e o Slack respondem dentro da sessão do Compozy.
-3. **Trava dos implementadores.** Rodam em `auto`, e as regras do `rules.sh` só chegam aos agentes sempre ligados. Para uma trava dura, ponha os comandos perigosos no `permissions.deny` do `~/.claude/settings.json` e teste um `git push --force` numa branch descartável.
-4. **Spec do erural no condutor.** O `spec_conductor` procura `_spec.md` e `_slices.md`; a GABI passa os caminhos absolutos da spec do `spec-driven` no prompt.
-5. **`@me` no script de PRs.** É o usuário do `gh auth` da máquina.
+1. **Rotina de sexta na nuvem.** A rotina "Deploy semanal em produção (aviso no Produto)" segue ativa na nuvem, sexta às 9h. Com o `release` rodando no Compozy, desligue a da nuvem para não abrir PR e avisar duas vezes.
+
+2. **`pixel-perfect`.** Não achei a skill em nenhum plugin instalado nem no GitHub alcançável. Sem ela, o `qa` registra que não houve conferência de design.
+3. **Conectores.** `gabi`, `investigador`, `comunicacao` e `release` usam `lean_environment: false` para herdar o ClickUp e o Slack do seu Claude Code. Confira se o ClickUp e o Slack respondem dentro da sessão do Compozy.
+4. **Trava dos implementadores.** Rodam em `auto`, e as regras do `rules.sh` só chegam aos agentes sempre ligados. Para uma trava dura, ponha os comandos perigosos no `permissions.deny` do `~/.claude/settings.json` e teste um `git push --force` numa branch descartável.
+5. **Spec do erural no condutor.** O `spec_conductor` procura `_spec.md` e `_slices.md`; a GABI passa os caminhos absolutos da spec do `spec-driven` no prompt.
+6. **`@me` no script de PRs.** É o usuário do `gh auth` da máquina.
 
 ## Documentação usada
 

@@ -22,7 +22,9 @@ LONG_LIVED_REGEX='^(main|master|develop|staging|production|prod|homolog)$'
 if [[ $# -gt 0 ]]; then
   REPOS=("$@")
 else
-  CUTOFF=$(date -u -d "${ACTIVE_DAYS} days ago" +%Y-%m-%dT%H:%M:%SZ)
+  # GNU date (Linux) ou BSD date (macOS).
+  CUTOFF=$(date -u -d "${ACTIVE_DAYS} days ago" +%Y-%m-%dT%H:%M:%SZ 2>/dev/null \
+    || date -u -v-"${ACTIVE_DAYS}"d +%Y-%m-%dT%H:%M:%SZ)
   mapfile -t REPOS < <(gh repo list "$ORG" --limit 500 --no-archived --json name,pushedAt \
     --jq ".[] | select(.pushedAt >= \"$CUTOFF\") | .name")
 fi
