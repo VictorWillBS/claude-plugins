@@ -47,24 +47,39 @@ Teto diário por agente sempre ligado: `compozy agent instance budget`.
 
 ## Instalação
 
-1. Instale, escolha o Claude como provedor e suba o serviço:
+1. Compozy instalado no WSL, com o Claude como provedor (`compozy install`). Os agendamentos só rodam com o serviço de pé, então ele roda como serviço do usuário no systemd, sem depender de terminal aberto. Pré-requisito: systemd ligado no WSL (`/etc/wsl.conf` com `[boot]` e `systemd=true`, e `wsl --shutdown` no Windows para aplicar).
 
    ```bash
-   brew install compozy/compozy/compozy
+   mkdir -p ~/.config/systemd/user && cat > ~/.config/systemd/user/compozy.service <<EOF
+   [Unit]
+   Description=CompozyOS daemon
+
+   [Service]
+   Type=simple
+   ExecStart=$(command -v compozy) daemon start --foreground
+   ExecStop=$(command -v compozy) daemon stop
+   Restart=on-failure
+   RestartSec=3
+
+   [Install]
+   WantedBy=default.target
+   EOF
    ```
 
    ```bash
-   compozy install
+   compozy daemon stop; systemctl --user daemon-reload && systemctl --user enable --now compozy
    ```
 
    ```bash
-   compozy daemon start
+   sudo loginctl enable-linger "$USER"
    ```
 
-2. Pré-requisitos dos scripts da `weekly-deploy` (bash 4 ou mais e `jq`; o macOS vem com bash 3.2), com o `gh` autenticado na organização:
+   O `enable-linger` mantém o serviço sem sessão aberta. O WSL ainda para quando o Windows dorme ou desliga; confira no Windows, com o terminal do WSL fechado, se a distribuição continua em `wsl --list --running`.
+
+2. Pré-requisitos dos scripts da `weekly-deploy`: `jq` e o `gh` autenticado na organização.
 
    ```bash
-   brew install bash jq
+   sudo apt install -y jq
    ```
 
    ```bash
