@@ -56,6 +56,7 @@ Teto diário por agente sempre ligado: `compozy agent instance budget`.
 
    [Service]
    Type=simple
+   Environment=PATH=$PATH
    ExecStart=$(command -v compozy) daemon start --foreground
    ExecStop=$(command -v compozy) daemon stop
    Restart=on-failure
@@ -74,7 +75,7 @@ Teto diário por agente sempre ligado: `compozy agent instance budget`.
    sudo loginctl enable-linger "$USER"
    ```
 
-   O `enable-linger` mantém o serviço sem sessão aberta. O WSL ainda para quando o Windows dorme ou desliga; confira no Windows, com o terminal do WSL fechado, se a distribuição continua em `wsl --list --running`.
+   Crie o serviço no terminal onde `claude`, `node`, `gh` e `jq` respondem: o `PATH` dele fica gravado no serviço, e sem isso o Compozy não acha o Claude. O `enable-linger` mantém o serviço sem sessão aberta. O WSL ainda para quando o Windows dorme ou desliga; confira no Windows, com o terminal do WSL fechado, se a distribuição continua em `wsl --list --running`.
 
 2. Pré-requisitos dos scripts da `weekly-deploy`: `jq` e o `gh` autenticado na organização.
 
