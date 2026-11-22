@@ -31,14 +31,11 @@ model = "claude-opus-5-5"
 reasoning_effort = "high"
 permissions = "auto"
 
-# Checagem dos reportes no Slack, pela GABI.
-[[automation.jobs]]
-scope = "workspace"
-workspace = "<caminho do clone do erural-mkp-app>"
-name = "gabi-slack"
-agent = "gabi"
-prompt = "Faça a checagem do Slack pela seção 'Reportes no Slack' do seu AGENT.md."
-schedule = { mode = "every", interval = "<intervalo, ex.: 30m>" }
+# Scripts do check-in (prs, slack, clickup). Os tokens vêm do ambiente do serviço
+# (~/.config/compozy/secrets.env, pelo EnvironmentFile) e só estas variáveis chegam aos scripts.
+# A checagem do Slack e do ClickUp é dos scripts slack e clickup da gabi, sem agendamento.
+[agents.heartbeat.sources]
+env_allow = ["SLACK_USER_TOKEN", "CLICKUP_API_TOKEN"]
 
 # Limpeza do ambiente, pela zeladoria.
 [[automation.jobs]]

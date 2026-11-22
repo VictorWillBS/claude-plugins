@@ -1,0 +1,100 @@
+#!/usr/bin/env -S python3 -I
+# Fonte do check-in da gabi: mensagens novas no chat do ClickUp, sem modelo.
+# Lê as DMs, os grupos de DM e os canais que o usuário segue (menos o ASK_AI).
+# Só abre a conversa cujo latest_comment_at passou do cursor; conversa nova começa do "agora".
+# Token em CLICKUP_API_TOKEN (liberado por [agents.heartbeat.sources].env_allow).
+import json
+import os
+import sys
+import urllib.parse
+import urllib.request
+from concurrent.futures import ThreadPoolExecutor
+
+TIPOS = {"DM": "DM", "GROUP_DM": "grupo de DM", "CHANNEL": "canal"}
+WORKERS = 4
+
+entrada = json.load(sys.stdin)
+token = os.environ.get("CLICKUP_API_TOKEN")
+if not token:
+    sys.exit("CLICKUP_API_TOKEN ausente no ambiente do script")
+
+estado = (entrada.get("state") or {}).get("cursores", {})
+max_itens = (entrada.get("limits") or {}).get("max_items", 20)
+
+
+def api(caminho, **params):
+    url = f"https://api.clickup.com/api/{caminho}"
+    if params:
+        url += "?" + urllib.parse.urlencode(params)
+    req = urllib.request.Request(url, headers={"Authorization": token})
+    with urllib.request.urlopen(req, timeout=10) as resp:
+        return json.load(resp)
+
+
+eu = api("v2/user")["user"]["id"]
+time = api("v2/team")["teams"][0]
+workspace = time["id"]
+nomes = {m["user"]["id"]: m["user"].get("username") or str(m["user"]["id"])
+         for m in time.get("members", [])}
+
+canais, cursor = [], None
+while True:
+    params = {"is_follower": "true", "limit": 100}
+    if cursor:
+        params["cursor"] = cursor
+    r = api(f"v3/workspaces/{workspace}/chat/channels", **params)
+    canais += [c for c in r.get("data", []) if c.get("type") in TIPOS and not c.get("archived")]
+    cursor = r.get("next_cursor")
+    if not cursor:
+        break
+
+
+def ler(c):
+    cid, ultimo = c["id"], int(c.get("latest_comment_at") or 0)
+    if cid not in estado:
+        return cid, ultimo, []
+    if ultimo <= estado[cid]:
+        return cid, None, []
+    r = api(f"v3/workspaces/{workspace}/chat/channels/{cid}/messages", limit=50)
+    novas = [m for m in r.get("data", [])
+             if int(m.get("date") or 0) > estado[cid] and str(m.get("user_id")) != str(eu)]
+    return cid, None, [(c, m) for m in novas]
+
+
+def _seguro(c):
+    try:
+        return ler(c)
+    except Exception as erro:  # conversa com falha fica com o cursor antigo e volta na próxima
+        print(f"{c['id']}: {erro}", file=sys.stderr)
+        return c["id"], None, []
+
+
+novo_estado = dict(estado)
+pendentes = []
+with ThreadPoolExecutor(WORKERS) as pool:
+    for cid, base, msgs in pool.map(_seguro, canais):
+        if base is not None:
+            novo_estado[cid] = base
+        pendentes.extend(msgs)
+
+pendentes.sort(key=lambda par: int(par[1]["date"]))
+devolvidas, mais = pendentes[:max_itens], len(pendentes) > max_itens
+
+itens = []
+for c, m in devolvidas:
+    cid = c["id"]
+    onde = TIPOS[c["type"]] + (f" {c['name']}" if c.get("name") else "")
+    autor = nomes.get(int(m["user_id"]) if str(m["user_id"]).isdigit() else m["user_id"],
+                      str(m["user_id"]))
+    texto = " ".join(str(m.get("content") or "").split())
+    itens.append({
+        "key": f"clickup:{cid}:{m['id']}",
+        "title": f"{autor} ({onde}): {texto[:120] or '(sem texto)'}"[:200],
+        "summary": texto[:1000],
+        "attributes": {"onde": onde, "channel_id": cid, "message_id": m["id"],
+                       "workspace_id": workspace, "autor": autor},
+    })
+    novo_estado[cid] = max(novo_estado.get(cid, 0), int(m["date"]))
+
+print(json.dumps({"items": itens, "state": {"cursores": novo_estado}, "more": mais},
+                 ensure_ascii=False))

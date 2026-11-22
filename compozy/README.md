@@ -29,7 +29,7 @@ O `reviewer` do Compozy fica sem uso: a revisão é do time de pós-código.
 
 **PR seu com comentário ou CI vermelho.** O `acompanhamento` abre um `code_implementer` com a `babysit-pr`.
 
-**Reporte no Slack.** A GABI checa `#lançamento-novo-mkp`, `#marketplace-produto` e as suas DMs, responde como você que vamos investigar e abre o `investigador`. Quando você for falar com a pessoa, a história de bug já tem a reprodução e a causa provável.
+**Mensagens no Slack e no ClickUp.** Dois scripts do check-in da GABI leem, sem modelo, as mensagens novas de outras pessoas: no Slack, as suas DMs, os grupos de DM, `#lançamento-novo-mkp` e `#marketplace-produto`; no chat do ClickUp, as DMs, os grupos de DM e os canais que você segue. Só mensagem nova acorda o modelo. Para reporte, a GABI responde como você que vamos investigar e abre o `investigador`; o resto entra resumido no relato. Quando você for falar com a pessoa, a história de bug já tem a reprodução e a causa provável. Resposta que fica só dentro de uma thread do Slack não chega ao script.
 
 **Release semanal.** Quinta, 17h: o `release` pergunta no canal Produto do ClickUp se há mudança importante para subir, com a lista do que já está em staging nos repositórios com mudança nos últimos 7 dias. Sexta, 9h: lê a thread; o repositório citado numa resposta fica segurado e você recebe DM; nos outros, confere o fluxo de branches pelos deploys anteriores, abre a PR de staging para produção (ou reusa a aberta) e avisa a release das 10h. Tudo pela skill `weekly-deploy` do `deploy-announcer`.
 
@@ -38,8 +38,7 @@ O `reviewer` do Compozy fica sem uso: a revisão é do time de pós-código.
 | Gatilho | Custo |
 | --- | --- |
 | Check-in do `acompanhamento` | o script roda sem modelo; o modelo só acorda quando um PR muda |
-| Check-in da `gabi` | só acorda o modelo quando o estado das sessões muda |
-| Checagem do Slack | uma chamada de modelo por intervalo, mesmo sem mensagem nova |
+| Check-in da `gabi` | só acorda o modelo quando o estado das sessões muda ou chega mensagem nova no Slack ou no ClickUp (os scripts rodam sem modelo) |
 | Zeladoria | uma sessão Haiku por execução |
 | Release | duas sessões Sonnet por semana |
 
@@ -57,6 +56,7 @@ Teto diário por agente sempre ligado: `compozy agent instance budget`.
    [Service]
    Type=simple
    Environment=PATH=$PATH
+   EnvironmentFile=-%h/.config/compozy/secrets.env
    ExecStart=$(command -v compozy) daemon start --foreground
    ExecStop=$(command -v compozy) daemon stop
    Restart=on-failure
@@ -77,7 +77,7 @@ Teto diário por agente sempre ligado: `compozy agent instance budget`.
 
    Crie o serviço no terminal onde `claude`, `node`, `gh` e `jq` respondem: o `PATH` dele fica gravado no serviço, e sem isso o Compozy não acha o Claude. O `enable-linger` mantém o serviço sem sessão aberta. O WSL ainda para quando o Windows dorme ou desliga; confira no Windows, com o terminal do WSL fechado, se a distribuição continua em `wsl --list --running`.
 
-2. Pré-requisitos dos scripts da `weekly-deploy`: `jq` e o `gh` autenticado na organização.
+2. Pré-requisitos dos scripts: `jq` e o `gh` autenticado na organização (`weekly-deploy` e `prs`), `python3` (`slack` e `clickup`) e os dois tokens.
 
    ```bash
    sudo apt install -y jq
@@ -86,6 +86,34 @@ Teto diário por agente sempre ligado: `compozy agent instance budget`.
    ```bash
    gh auth status
    ```
+
+   **Token do Slack** (de usuário, só leitura): em https://api.slack.com/apps, **Create New App**, **From a manifest**, no workspace da erural, com este manifest. Depois, **OAuth & Permissions**, **Install to Workspace**, e copie o **User OAuth Token** (`xoxp-`).
+
+   ```json
+   {
+     "display_information": { "name": "GABI leitura" },
+     "oauth_config": {
+       "scopes": {
+         "user": ["channels:history", "channels:read", "groups:history", "groups:read",
+                  "im:history", "im:read", "mpim:history", "mpim:read", "users:read"]
+       }
+     },
+     "settings": { "org_deploy_enabled": false, "socket_mode_enabled": false }
+   }
+   ```
+
+   **Token do ClickUp** (pessoal): avatar, **Settings**, **Apps**, **API Token**, **Generate** (`pk_`).
+
+   Grave os dois sem que apareçam na tela. O serviço carrega o arquivo, e o `env_allow` do `config.toml` libera as duas variáveis só para os scripts do check-in:
+
+   ```bash
+   mkdir -p ~/.config/compozy && chmod 700 ~/.config/compozy
+   touch ~/.config/compozy/secrets.env && chmod 600 ~/.config/compozy/secrets.env
+   read -rsp 'Token do Slack: ' T && printf 'SLACK_USER_TOKEN=%s\n' "$T" >> ~/.config/compozy/secrets.env && unset T; echo
+   read -rsp 'Token do ClickUp: ' T && printf 'CLICKUP_API_TOKEN=%s\n' "$T" >> ~/.config/compozy/secrets.env && unset T; echo
+   ```
+
+   Com o daemon já rodando, reinicie pelo serviço para ele ler o arquivo: `compozy daemon stop; systemctl --user start compozy`.
 
 3. Junte o `config.toml` desta pasta ao `~/.compozy/config.toml` e preencha os valores entre `<>`.
 
@@ -115,19 +143,25 @@ Teto diário por agente sempre ligado: `compozy agent instance budget`.
    bash compozy/rules.sh
    ```
 
-7. Aprove as ações dos check-ins e o script de PRs (o Compozy ignora tudo até você aprovar):
+7. Aprove as ações dos check-ins e os scripts (o Compozy ignora tudo até você aprovar). Rode no seu terminal, de dentro do clone do `erural-mkp-app` e com `--workspace`: uma sessão de agente recebe `operator_only`, e sem o workspace a aprovação vai para outro escopo. O `show` dá o digest; o `approve` imprime o bloco como estava antes de aprovar, então confira com o `show` de novo.
 
    ```bash
-   compozy agent heartbeat authority approve gabi
+   compozy agent heartbeat authority show gabi --workspace erural-mkp-app
+   compozy agent heartbeat authority approve gabi --workspace erural-mkp-app --sha256 <digest> --yes
    ```
 
    ```bash
-   compozy agent heartbeat authority approve acompanhamento
+   compozy agent heartbeat authority show acompanhamento --workspace erural-mkp-app
+   compozy agent heartbeat authority approve acompanhamento --workspace erural-mkp-app --sha256 <digest> --yes
    ```
 
    ```bash
-   compozy agent heartbeat sources approve acompanhamento prs
+   compozy agent heartbeat sources approve acompanhamento prs --workspace erural-mkp-app
+   compozy agent heartbeat sources approve gabi slack --workspace erural-mkp-app
+   compozy agent heartbeat sources approve gabi clickup --workspace erural-mkp-app
    ```
+
+   Editar um script ou uma ação muda o hash ou o digest e exige aprovar de novo.
 
 8. Ponha um teto diário nos dois:
 
@@ -158,6 +192,12 @@ Teto diário por agente sempre ligado: `compozy agent instance budget`.
    ```bash
    compozy agent instance check acompanhamento --workspace erural-mkp-app --dry-run
    ```
+
+   ```bash
+   compozy agent instance check gabi --workspace erural-mkp-app --dry-run
+   ```
+
+   Na primeira passada, os scripts do Slack e do ClickUp só marcam o ponto de partida e devolvem zero mensagens: o histórico não entra.
 
 ## A conferir no primeiro uso
 

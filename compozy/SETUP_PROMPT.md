@@ -9,7 +9,6 @@ Configure no Compozy, nesta máquina (WSL), o time de agentes descrito em `~/cla
 3. Confira o que já existe: `compozy status`, `compozy doctor -o json`, `cat ~/.compozy/config.toml`, `ls ~/.compozy/agents`, `compozy workspace list`. Me mostre o que já está configurado antes de mexer.
 4. Me pergunte de uma vez, numa única pergunta, os valores que só eu sei, e não invente nenhum:
    - caminho do clone do `erural-mkp-app`;
-   - intervalo da checagem do Slack;
    - horário da zeladoria e dias sem atividade para uma sessão contar como abandonada;
    - máximo de rodadas de revisão e correção por entrega;
    - teto diário em dólar da `gabi` e do `acompanhamento`.
@@ -17,13 +16,13 @@ Configure no Compozy, nesta máquina (WSL), o time de agentes descrito em `~/cla
 ## Ordem
 
 1. **Serviço.** Confira se o systemd está ligado (`systemctl --user status`). Se não estiver, me diga para pôr `[boot]` e `systemd=true` no `/etc/wsl.conf` e rodar `wsl --shutdown` no Windows, e pare até eu voltar. Com o systemd ligado, crie o serviço do usuário como no passo 1 da Instalação do README e ligue-o. Comandos com `sudo` (`loginctl enable-linger`, `apt install`): me passe o comando exato para eu rodar, não tente rodar.
-2. **Pré-requisitos.** `jq` instalado e `gh auth status` autenticado na organização `pastar-br`. Faltando algum, me passe o comando.
+2. **Pré-requisitos.** `jq` instalado e `gh auth status` autenticado na organização `pastar-br`. Faltando algum, me passe o comando. Os tokens do Slack e do ClickUp: me guie pelo passo 2 da Instalação do README para eu criar e gravar em `~/.config/compozy/secrets.env`; nunca peça o token no chat.
 3. **Config.** Faça backup do `~/.compozy/config.toml` (`cp` com a data no nome). Junte o trecho do `compozy/config.toml` ao arquivo existente, sem apagar o que já está lá: chave repetida, mostre as duas versões e me pergunte qual fica. Preencha os valores que eu dei. Valide com `compozy config validate` (ou o equivalente que o `compozy config --help` mostrar) e reinicie o serviço.
-4. **Agentes.** Copie `compozy/agents/*` para `~/.compozy/agents/`. Se já existir um agente com o mesmo nome, mostre a diferença e me pergunte antes de sobrescrever. Confira com `compozy agent list` e `compozy agent show <nome> -o json` que os 10 agentes carregaram sem erro.
+4. **Agentes.** Copie `compozy/agents/*` para `~/.compozy/agents/`. Se já existir um agente com o mesmo nome, mostre a diferença e me pergunte antes de sobrescrever. Confira com `compozy agent list` e `compozy agent info <nome> -o json` que os 10 agentes carregaram sem erro.
 5. **Skills.** `compozy skill list` precisa mostrar `specify`, `outbound-message`, `voice-profile` e `weekly-deploy`.
 6. **Workspace e agentes sempre ligados.** Do clone do `erural-mkp-app`: `compozy workspace add` (se ainda não estiver registrado), depois `compozy agent instance create gabi` e `compozy agent instance create acompanhamento` nesse workspace.
 7. **Regras.** Preencha o `MAX_RODADAS` do `rules.sh` com o valor que eu dei e rode. Confira com `compozy agent memory inspect gabi`.
-8. **Aprovações.** Para cada uma (`heartbeat authority` da `gabi` e do `acompanhamento`, `heartbeat sources` do script `prs`), rode o `show`, me mostre o bloco ou o script e só aprove depois do meu "pode".
+8. **Aprovações.** Para cada uma (`heartbeat authority` da `gabi` e do `acompanhamento`, `heartbeat sources` dos scripts `prs`, `slack` e `clickup`), rode o `show`, me mostre o bloco ou o script e, depois do meu "pode", me passe o comando exato com `--workspace erural-mkp-app` e o `--sha256` para eu rodar: a sessão do Compozy não pode aprovar (`operator_only`). Confira com o `show` depois.
 9. **Teto diário.** `compozy agent instance budget` dos dois, com os valores que eu dei.
 10. **Git local.** No clone do `erural-mkp-app`, acrescente `.specs/**/_run.md` ao `.git/info/exclude`, se ainda não estiver lá.
 

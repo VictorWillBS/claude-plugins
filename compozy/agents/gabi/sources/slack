@@ -1,0 +1,121 @@
+#!/usr/bin/env -S python3 -I
+# Fonte do check-in da gabi: mensagens novas no Slack, sem modelo.
+# Lê as DMs, os grupos de DM e os canais de CANAIS em que o usuário está.
+# Estado: o último ts lido por conversa. Conversa nova começa do "agora", sem trazer histórico.
+# Token em SLACK_USER_TOKEN (liberado por [agents.heartbeat.sources].env_allow).
+import json
+import os
+import sys
+import urllib.parse
+import urllib.request
+from concurrent.futures import ThreadPoolExecutor
+
+CANAIS = {"lançamento-novo-mkp", "marketplace-produto"}
+WORKERS = 6
+
+entrada = json.load(sys.stdin)
+token = os.environ.get("SLACK_USER_TOKEN")
+if not token:
+    sys.exit("SLACK_USER_TOKEN ausente no ambiente do script")
+
+estado = (entrada.get("state") or {}).get("cursores", {})
+max_itens = (entrada.get("limits") or {}).get("max_items", 20)
+
+
+def api(metodo, **params):
+    url = f"https://slack.com/api/{metodo}?{urllib.parse.urlencode(params)}"
+    req = urllib.request.Request(url, headers={"Authorization": f"Bearer {token}"})
+    with urllib.request.urlopen(req, timeout=10) as resp:
+        dados = json.load(resp)
+    if not dados.get("ok"):
+        raise RuntimeError(f"{metodo}: {dados.get('error')}")
+    return dados
+
+
+def conversas():
+    lista, cursor = [], ""
+    while True:
+        r = api("users.conversations", types="im,mpim,public_channel,private_channel",
+                exclude_archived="true", limit=200, cursor=cursor)
+        for c in r["channels"]:
+            if c.get("is_im") or c.get("is_mpim") or c.get("name") in CANAIS:
+                lista.append(c)
+        cursor = (r.get("response_metadata") or {}).get("next_cursor") or ""
+        if not cursor:
+            return lista
+
+
+eu = api("auth.test")
+meu_id, base_url = eu["user_id"], eu["url"].rstrip("/")
+todas = conversas()
+
+
+def ler(c):
+    cid = c["id"]
+    if cid not in estado:
+        r = api("conversations.history", channel=cid, limit=1)
+        msgs = r.get("messages") or []
+        return cid, (msgs[0]["ts"] if msgs else "0"), []
+    r = api("conversations.history", channel=cid, oldest=estado[cid], limit=50)
+    novas = [m for m in r.get("messages") or []
+             if m.get("type") == "message" and m.get("user") and m.get("user") != meu_id
+             and m.get("subtype") in (None, "thread_broadcast", "file_share")]
+    return cid, None, [(c, m) for m in novas]
+
+
+def _seguro(c):
+    try:
+        return ler(c)
+    except Exception as erro:  # conversa com falha fica com o cursor antigo e volta na próxima
+        print(f"{c['id']}: {erro}", file=sys.stderr)
+        return c["id"], None, []
+
+
+novo_estado = dict(estado)
+pendentes = []
+with ThreadPoolExecutor(WORKERS) as pool:
+    for cid, base, msgs in pool.map(_seguro, todas):
+        if base is not None:
+            novo_estado[cid] = base
+        pendentes.extend(msgs)
+
+pendentes.sort(key=lambda par: float(par[1]["ts"]))
+devolvidas, mais = pendentes[:max_itens], len(pendentes) > max_itens
+
+nomes = {}
+
+
+def nome(uid):
+    if uid not in nomes:
+        try:
+            p = api("users.info", user=uid)["user"]
+            nomes[uid] = p.get("real_name") or p.get("name") or uid
+        except Exception:
+            nomes[uid] = uid
+    return nomes[uid]
+
+
+itens = []
+for c, m in devolvidas:
+    cid, ts = c["id"], m["ts"]
+    if c.get("is_im"):
+        onde = "DM"
+    elif c.get("is_mpim"):
+        onde = "grupo de DM"
+    else:
+        onde = f"#{c.get('name')}"
+    autor = nome(m["user"])
+    texto = " ".join((m.get("text") or "").split())
+    itens.append({
+        "key": f"slack:{cid}:{ts}",
+        "title": f"{autor} ({onde}): {texto[:120] or '(sem texto)'}"[:200],
+        "summary": texto[:1000],
+        "url": f"{base_url}/archives/{cid}/p{ts.replace('.', '')}",
+        "attributes": {"canal": onde, "channel_id": cid, "ts": ts,
+                       "thread_ts": m.get("thread_ts") or ts, "autor": autor},
+    })
+    if float(ts) > float(novo_estado.get(cid, "0")):
+        novo_estado[cid] = ts
+
+print(json.dumps({"items": itens, "state": {"cursores": novo_estado}, "more": mais},
+                 ensure_ascii=False))
