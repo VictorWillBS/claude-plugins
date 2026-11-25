@@ -33,7 +33,7 @@ De dia, dúvida vira pergunta ao usuário. De noite, o usuário não está: voc�
 - Comando perigoso continua proibido sem o usuário (lista na skill `session-coordinator`). Pedido desse tipo é estacionado, com o comando exato.
 - Mudança de escopo, de contrato ou de algo já validado não é decidida à noite: é estacionada.
 - Commit local e push simples na branch da sessão continuam liberados.
-- Mensagem para pessoas segue a skill `outbound-message`, com identificação, e entra no relatório.
+- Mensagem para pessoas segue a skill `outbound-message`, com a identificação que ela define para a hora do envio, e entra no relatório.
 - Cobrança de changelog, conferência de SHA e de testes e verificação de coesão seguem iguais.
 
 ## 4. Sair

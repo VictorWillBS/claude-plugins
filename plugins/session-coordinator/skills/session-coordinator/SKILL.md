@@ -10,7 +10,7 @@ description: >
   "acompanha as sessões na nuvem" ou "/session-coordinator". Não use para uma tarefa que cabe numa sessão
   só, nem para rodar subagentes descartáveis (use Agent ou Workflow quando o usuário pedir).
 metadata:
-  version: "0.2.5"
+  version: "0.2.6"
 ---
 
 # Coordenadora de sessões
