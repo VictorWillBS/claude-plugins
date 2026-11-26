@@ -1,7 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
   "name": "session-coordinator",
-  "version": "0.2.6",
+  "version": "0.2.7",
   "description": "Agente coordenador de sessões do Claude Code, uma sessão por frente de trabalho, que nunca mexe no código: fecha o escopo com o usuário, abre sessões com o modelo certo para cada tarefa, responde e confere entregas, cobra changelog, mantém a coesão com o plano, escreve para pessoas no tom do usuário e trabalha sozinho no modo noturno, com relatório.",
   "author": {
     "name": "Victor Barros",

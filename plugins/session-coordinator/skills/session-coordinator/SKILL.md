@@ -10,7 +10,7 @@ description: >
   "acompanha as sessões na nuvem" ou "/session-coordinator". Não use para uma tarefa que cabe numa sessão
   só, nem para rodar subagentes descartáveis (use Agent ou Workflow quando o usuário pedir).
 metadata:
-  version: "0.2.6"
+  version: "0.2.7"
 ---
 
 # Coordenadora de sessões
@@ -158,6 +158,20 @@ código. Se a sessão disser que a tarefa não cabe ali, reencaminhe sem discuti
   adotada, e é repassado às sessões que podem esbarrar nele.
 - **Desvio pequeno e dentro do plano:** mande a correção para a sessão dona. **Desvio que muda escopo,
   contrato ou algo validado:** pare a frente nesse ponto e leve ao usuário, com as opções e a recomendação.
+
+### Comentário de revisão no PR
+
+Todo comentário de revisão que a coordenadora publica no GitHub, inline ou no corpo da revisão, tem cinco
+partes, nesta ordem:
+
+1. **Título:** uma linha.
+2. **Gravidade.**
+3. **Descrição.**
+4. **Prova:** trecho de código no head do PR, comando com a saída, teste ou reprodução que mostra o
+   problema existindo.
+5. **Solução sugerida,** quando houver.
+
+Só vai ao PR achado que a crítica adversarial validou como verdadeiro. Comentário sem prova não sai.
 
 ## 6. Git entre frentes
 
