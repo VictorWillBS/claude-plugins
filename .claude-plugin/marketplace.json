@@ -33,6 +33,11 @@
       "name": "session-coordinator",
       "source": "./plugins/session-coordinator",
       "description": "Agente coordenador de sessões do Claude Code, uma por frente de trabalho, que nunca mexe no código: escopo fechado com o usuário, sessões com o modelo certo para cada tarefa, conferência de entregas e changelogs contra o plano, mensagens no tom do usuário e modo noturno com relatório."
+    },
+    {
+      "name": "design-conformance",
+      "source": "./plugins/design-conformance",
+      "description": "Verificação pixel perfect das telas implementadas contra o erural-product-design: captura o canvas e o app com Playwright no mesmo tamanho e tema, mede as diferenças, percorre os fluxos e confere os casos de uso, com relatório de prints comparativos, gravidade, prioridade e correção recomendada."
     }
   ]
 }
