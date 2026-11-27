@@ -1,0 +1,11 @@
+{
+  "name": "design-conformance-scripts",
+  "private": true,
+  "description": "Scripts de captura e comparação da skill pixel-perfect.",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "playwright": "1.57.0"
+  }
+}

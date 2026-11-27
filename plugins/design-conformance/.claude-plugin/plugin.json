@@ -1,0 +1,10 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "design-conformance",
+  "version": "0.1.0",
+  "description": "Verificação pixel perfect das telas implementadas contra o erural-product-design: renderiza cada quadro do canvas e a tela do app com Playwright no mesmo tamanho, mede as diferenças de pixel, texto, tipografia, cor e posição, percorre os fluxos e confere os casos de uso da especificação, e emite um relatório com prints comparativos, gravidade, prioridade e a correção recomendada.",
+  "author": {
+    "name": "Victor Barros",
+    "email": "victorwbarros.dev@gmail.com"
+  }
+}
